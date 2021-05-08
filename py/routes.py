@@ -7,40 +7,25 @@ from py.model import trainModels
 
 @app.route('/', methods=['GET'])
 def index():
-    # r = rPostImage(1,2)
-    g = rGetMaxId()
-    print(g)
-    return {"res":g}
-
-
-# @app.route('/image/<url>', methods=['GET'])
-# def image(url):
-#     print(url)
-#     return send_file(url_for('images', filename=url), mimetype='image/gif')
+    return {"res":"API"}
 
 @app.route('/get_image/<id>')
 def get_image(id):
-    #TODO redirect to image with that id
-    # return send_file("images/0.jpg", mimetype='image/gif')
     imageName = sGetImageWithId(id)
     return send_file("../images/{}".format(imageName))
 
 
-
-
 @app.route('/all')
 def all():
-    # if request.args.get('type') == '1':
-    #    filename = 'ok.gif'
-    # else:
-    #    filename = 'error.gif'
     items = {"items": sGetAllImages()}
+    print(items)
     return items, 200
 
 
 @app.route('/getSimilarImages/<imgName>')
 def getSimilarImages(imgName):
     items = {"items": sGetSimilarImages(imgName)}
+    print(items)
     return items, 200
 
 
@@ -62,6 +47,7 @@ def postImage():
         print(Exception)
         return {}, 400
 
+    print(result)
     return result, 200
 
 

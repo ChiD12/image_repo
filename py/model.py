@@ -180,7 +180,7 @@ def trainModels():
     epochs = 150
     learning_rate = 0.006
 
-    device = "cuda"
+    device = "cpu"
     print(f'device: {device}')
 
     encoder = ConvEncoder()
