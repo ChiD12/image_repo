@@ -184,7 +184,7 @@ def trainModels():
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=32)
 
     # Training hyper parameters
-    epochs = 150
+    epochs = 300
     learning_rate = 0.006
 
     device = "cpu"
