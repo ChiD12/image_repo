@@ -1,7 +1,5 @@
 from py import app
-import jsonpickle
-from flask import send_file, url_for, request, Response, redirect, send_from_directory, send_file
-from py.repo import rGetMaxId, rPostImage, rGetAllImages
+from flask import send_file, request, send_file
 from py.service import sGetAllImages, sGetImageWithId, sGetSimilarImages, sPostImage
 from py.model import trainModels
 
@@ -18,7 +16,7 @@ def get_image(id):
 @app.route('/all')
 def all():
     items = {"items": sGetAllImages()}
-    print(items)
+    print("sent all images")
     return items, 200
 
 
@@ -35,10 +33,8 @@ def postImage():
     contentType = request.content_type.split('/')
 
     if contentType[0] == "image":
-        print("image")
         isUrl = False
     else:
-        print("url")
         isUrl = True
 
     try:

@@ -1,5 +1,4 @@
 import torch
-import torchvision
 from torch.utils.data import Dataset, random_split, DataLoader
 from torchvision.datasets import ImageFolder
 from torch.optim import Adam
@@ -10,16 +9,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from sklearn.neighbors import NearestNeighbors
-import config
 import math
 import re
 
-print(os.listdir())
 imageDir = "./images"
-# dataset = ImageFolder("./")
 
-
-
+#Dataset object for pytorch to use
 class ImagesDataset(Dataset):
     
     def __init__(self, main_dir, transform=None):
@@ -53,6 +48,21 @@ def nomalizeImgShape(img):
     imgH = img.shape[1]
     imgW = img.shape[2]
 
+    if imgH > imgW:
+        dif = imgH - imgW
+        split = int(dif/2)
+        if dif %2 == 0:
+            img = img[:, split: imgH-(split), :]
+        elif dif %2 != 0:
+            img = img[:, split +1: imgH-(split), :]
+    elif imgH < imgW:
+        dif = imgW - imgH
+        split = int(dif/2)
+        if dif %2 == 0:
+            img = img[:, :, split: imgW-(split)]
+        elif dif %2 != 0:
+            img = img[:, :, split +1: imgW-(split)]
+
     downsampleTimes = int(min(img.shape[1]/(desiredH *2), img.shape[2]/(desiredW*2)))
 
     #if we cant downsample by atleast 2
@@ -62,7 +72,7 @@ def nomalizeImgShape(img):
         wToCut =  (img.shape[2]- desiredW)/2
         
         #if the image has an odd resolutions, use ceil for lower bound 
-        img3 = img[:: , math.ceil(hToCut)  :imgH - math.floor(hToCut), math.ceil(wToCut):imgW - math.floor(wToCut)]
+        img3 = img[:: , math.ceil(hToCut)  :img.shape[1] - math.floor(hToCut), math.ceil(wToCut):img.shape[2] - math.floor(wToCut)]
         
     else:
         #downsample
@@ -70,10 +80,10 @@ def nomalizeImgShape(img):
         img2 = img[:: , :: downsampleTimes, ::downsampleTimes]
 
         #cut off extra
-        hToCut =  img2.shape[1]- desiredH
-        wToCut =  img2.shape[2]- desiredW
-        img3 = img2[:: , hToCut:imgH - hToCut, wToCut:imgW - wToCut]
-    sh2= img3.shape
+        hToCut =  (img2.shape[1]- desiredH)/2
+        wToCut =  (img2.shape[2]- desiredW)/2
+        img3 = img2[:: , math.ceil(hToCut)  :img2.shape[1] - math.floor(hToCut), math.ceil(wToCut):img2.shape[2] - math.floor(wToCut)]
+    
 
     return img3
 
@@ -157,20 +167,17 @@ class ConvDecoder(nn.Module):
         return x
 
 def trainModels():
-    dataset = ImageFolder("./")
-
     transform = transforms.Compose([
-        # transforms.Resize((240, 240)),
         transforms.ToTensor()    
     ])
 
     ImagesDS = ImagesDataset("./images", transform)
     print(ImagesDS.all_imgs)
     
+    #split datasaet into training and validation
     val_percent = 0.3
     val_size = int(len(ImagesDS)*val_percent)
     train_size = len(ImagesDS) - val_size
-    
     train_dataset, val_dataset = torch.utils.data.random_split(ImagesDS, [train_size, val_size])
 
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True)
@@ -201,7 +208,7 @@ def trainModels():
         print(f"Epochs = {epoch}, Training Loss : {train_loss}")
         print(f"Epochs = {epoch}, Validation Loss : {val_loss}")
 
-        # Simple Best Model saving
+        #save best models
         min_loss = 1
         if val_loss < min_loss:
             print("Validation Loss decreased, saving new best model")
@@ -214,6 +221,7 @@ def trainModels():
     Images_loader = torch.utils.data.DataLoader(ImagesDS, batch_size=32)
     embedding = create_embedding(encoder, Images_loader, EMBEDDING_SHAPE, device)
 
+    #save embedings
     numpy_embedding = embedding.cpu().detach().numpy()
     num_images = numpy_embedding.shape[0]
     flattened_embedding = numpy_embedding.reshape((num_images, -1))
@@ -255,7 +263,6 @@ def train_step(encoder, decoder, train_loader, loss_fn, optimizer, device, val =
 
 def create_embedding(encoder, full_loader, embedding_dim, device):
     encoder.eval()
-    # Just a place holder for our 0th image embedding.
     embedding = torch.randn(embedding_dim)
     
     with torch.no_grad():
@@ -267,11 +274,11 @@ def create_embedding(encoder, full_loader, embedding_dim, device):
     
     return embedding
 
-
+#compare an image to all the image imbeddings 
 def compute_similar_images(image, num_images, embedding= None, device = None):
     
     image_tensor = transforms.ToTensor()(image)
-    image_tensor = nomalizeImgShape(image_tensor)
+    # image_tensor = nomalizeImgShape(image_tensor)
     image_tensor = image_tensor.unsqueeze(0)
     
     encoder = ConvEncoder()
@@ -292,40 +299,3 @@ def compute_similar_images(image, num_images, embedding= None, device = None):
     indices_list = indices.flatten().tolist()
     print(indices)
     return indices_list
-
-def plot_similar_images(indices_list):
-    maps = {0: '0.jpg', 1: '105992231-1561667465295gettyimages-521697453.jpeg', 2: '2.jpeg', 3: '20-annual-flowers-hero.jpeg', 
-4: '20200709-dog.jpg', 5: '322868_1100-1100x628.jpg', 6: '7A1AA7B6-1E54-4974-96488CF81302DC7C_source.webp', 
-7: '92E141F8-36E4-4331-BB2EE42AC8674DD3_source.webp', 8: 'boo.jpg', 9: 'dog-puppy-on-garden-royalty-free-image-1586966191.jpg', 
-10: 'flowers.jpg', 11: 'Header_206.jpg', 12: 'Hero-Frond-yellow_100_02_1_1600x.webp', 13: 'portrait-if-a-spitz-pomeranian_t20_v3o29E-5ae9bbdca18d9e0037d95983.jpg',
- 14: 'Top-10-Plants-That-Make-You-Happy-feature.png',  15: 'VSy6kJDNq2pSXsCzb6cvYF.jpg',
-16: '_111434467_gettyimages-1143489763.jpg'}
-    indices = indices_list[0]
-    for index in indices:
-        if index == 0:
-            # index 0 is a dummy embedding.
-            pass
-        else:
-            img_name = maps[index-1]
-            img_path = os.path.join("./images/" +img_name)
-            # print(img_path)
-            img = Image.open(img_path).convert("RGB")
-            plt.figure(index)
-            plt.imshow(img)
-            
-            # img.save(f"../outputs/query_image_3/recommended_{index - 1}.jpg")
-    plt.show()
-
-# trainModels()
-
-# imgnp = np.asarray(img)
-
-# plt.figure(300)
-# plt.imshow(img)
-# plt.show()
-
-#10:23 - 10:27 for 250 epochs with 19 images 0.01516 val error, 0.01559 training error
-
-# img = Image.open("./images/13gbda1ed14f5a43c42.jpg").convert("RGB")
-# h = compute_similar_images(img, 5)
-# plot_similar_images(h)

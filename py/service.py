@@ -1,12 +1,13 @@
 from py import app
 from py.repo import rGetAllImages, rGetMaxId, rGetImageWithId ,rPostImage
-from py.model import compute_similar_images
+from py.model import compute_similar_images, nomalizeImgShape
 import secrets
 import os
 import urllib.request
 import io
 import numpy as np
 from PIL import Image
+import torchvision.transforms as transforms
 
 
 
@@ -27,7 +28,7 @@ def sGetImageWithId(id):
 
 def sGetSimilarImages(imgName):
     IMAGESTOSEND = 9
-    folderName = './images/'
+    folderName = './256/'
     img = Image.open(folderName + imgName).convert("RGB")
     similarImageIds = compute_similar_images(img, IMAGESTOSEND+1)
 
@@ -77,6 +78,7 @@ def sPostImage(img, isURL, imageType = None):
 
         absolutePath = os.path.join(app.root_path, '../images', fileName)
         urllib.request.urlretrieve(URL, absolutePath)
+        image = Image.open(absolutePath).convert("RGB")
         
         
 
@@ -87,9 +89,21 @@ def sPostImage(img, isURL, imageType = None):
         absolutePath = os.path.join(app.root_path, '../images', fileName)
 
 
-        image = Image.open(io.BytesIO(img))
+        image = Image.open(io.BytesIO(img)).convert("RGB")
         image.save(absolutePath)
 
+
+
+
+    tensorImg = transforms.ToTensor()(image)
+    tensorImg = tensorImg.unsqueeze(0)
+
+    smallImg = nomalizeImgShape(tensorImg[0])
+    
+    smallAbsolutePath = os.path.join(app.root_path, '../256', fileName)
+
+    smallImg = transforms.ToPILImage(mode='RGB')(smallImg)
+    smallImg.save(smallAbsolutePath)
 
     newEntry = rPostImage(fileName)
     newList = {"id": newEntry.id, "name": newEntry.name}
