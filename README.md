@@ -20,14 +20,15 @@ Routes(Endpoints) &#8594; Service(Business Logic) &#8594; Repo(Database Calls)
 
 sqlite is used so databse is stores in site.db
 
-#Folders
-###images
+# Folders
+
+### images
 Image storage folder
-###256
+### 256
 Stores downscaled 256x256 versions of images to be used in conv neural network
-###models
+### models
 Stores trained models as well as encodings for the images
-###py
+### py
 Python files
 
 
