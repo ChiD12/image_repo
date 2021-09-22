@@ -3,6 +3,7 @@
 [Frontend Found here](https://github.com/ChiD12/image_repo_frontend)
 \
 [Live Demo](http://image.danielr.tech/).
+ONLY WORKS ON HTTP, NOT HTTPS
 
 Image Repository whose features include storing images, delivering images, and uses a Convalutional Neural Network to create image encodings to find similarities between images as well as the image represented in a graphing calculator and likes
 
