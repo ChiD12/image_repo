@@ -1,45 +1,49 @@
-
 from py.dbmodels import Image, UserLikes
-from py import db
+#from py import db
 from sqlalchemy import func 
 
-def rGetAllImages():
-    imgs = Image.query.all()
-    return imgs
+class Repo:
+    def __init__(self, db):
+        self.db = db
+        # self.Image = 
 
-def rGetAllLikes():
-    likes = UserLikes.query.all()
-    return likes
+    def rGetAllImages(self):
+        imgs = Image.query.all()
+        return imgs
 
-def rGetMaxId():
-    lastId = db.session.query(func.max(Image.id)).first()
-    return lastId[0]
+    def rGetAllLikes(self):
+        likes = UserLikes.query.all()
+        return likes
 
-def rGetImageWithId(id):
-    img = Image.query.filter_by(id=id).first()
-    return img
+    def rGetMaxId(self):
+        lastId = self.db.session.query(func.max(Image.id)).first()
+        return lastId[0]
 
-def rGetAllLikesWithId(userId):
-    likes = UserLikes.query.filter_by(userId=userId).all()
-    return likes
+    def rGetImageWithId(self, id):
+        img = Image.query.filter_by(id=id).first()
+        return img
 
-def rPostImage(name):
-    image = Image(name=name, likes=0)
-    db.session.add(image)
-    db.session.commit()
-    return image
+    def rGetAllLikesWithId(self, userId):
+        likes = UserLikes.query.filter_by(userId=userId).all()
+        return likes
 
-def rGetLikesByUser(userId):
-    userLikesList = UserLikes.query.filter_by(userId = userId)
-    return userLikesList
+    def rPostImage(self, name):
+        image = Image(name=name, likes=0)
+        self.db.session.add(image)
+        self.db.session.commit()
+        return image
 
-def rAddLike(userId, imgId):
-    like = UserLikes(userId=userId, imgId=imgId)
-    db.session.add(like)
+    def rGetLikesByUser(self, userId):
+        userLikesList = UserLikes.query.filter_by(userId = userId)
+        return userLikesList
 
-    img = Image.query.filter_by(id=imgId).first()
-    setattr(img, 'likes', img.likes+1)
+    def rAddLike(self, userId, imgId):
+        like = UserLikes(userId=userId, imgId=imgId)
+        self.db.session.add(like)
 
-    db.session.commit()
+        img = Image.query.filter_by(id=imgId).first()
+        setattr(img, 'likes', img.likes+1)
 
-    return img.likes
+        self.db.session.commit()
+
+        return img.likes
